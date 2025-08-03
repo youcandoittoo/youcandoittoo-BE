@@ -18,7 +18,7 @@ public class JwtHelper {
     public JwtHelper(
             JwtUtil jwtUtil,
             RedisTemplate<String, String> redisTemplate,
-            @Value("{spring.jwt.refresh-ttl}") long REFRESH_TOKEN_TTL
+            @Value("${spring.jwt.refresh-ttl}") long REFRESH_TOKEN_TTL
     ) {
         this.jwtUtil = jwtUtil;
         this.redisTemplate = redisTemplate;

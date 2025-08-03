@@ -26,10 +26,10 @@ public class JwtUtil {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
-    public String createJwt(String category, String username, String role, String loginType, Long expiredS) {
+    public String createJwt(String category, String username, String loginType, Long expiredS) {
         return Jwts.builder()
                 .claim("category", category)
-                .claim("role", role)
+                .claim("username", username)
                 // 소셜 / 일반 로그인 구분
                 .claim("loginType", loginType)
                 .subject(username)
@@ -53,10 +53,6 @@ public class JwtUtil {
 
     public String getUserName(String token) {
         return getClaims(token).getSubject();
-    }
-
-    public String getRole(String token) {
-        return getClaims(token).get("role", String.class);
     }
 
     public long getExpiration(String refreshToken) {
@@ -97,5 +93,10 @@ public class JwtUtil {
             System.out.println("JWT token error");
             throw new AuthException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public Boolean isExpired(String token) {
+
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before((new Date()));
     }
 }

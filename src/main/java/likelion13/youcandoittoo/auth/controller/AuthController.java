@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "SocialLogin", description = "소셜로그인 API")
 public class AuthController {
 
     private final AuthService authService;
@@ -26,6 +25,7 @@ public class AuthController {
     )
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
+        System.out.println("AuthController.reissue() 호출됨");
         return authService.reissue(request, response);
     }
 }
