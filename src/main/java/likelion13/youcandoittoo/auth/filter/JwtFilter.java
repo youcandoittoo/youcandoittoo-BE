@@ -5,7 +5,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
+import likelion13.youcandoittoo.global.exception.custom.AuthException;
+import likelion13.youcandoittoo.user.entity.User;
+import likelion13.youcandoittoo.user.userDetail.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,18 +25,25 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = request.getHeader("Authorization");
+        String accessToken = request.getHeader("Authorization");
 
-        if (token == null || !token.startsWith("Bearer ")) {
+        if (accessToken == null) {
+
             filterChain.doFilter(request, response);
+
+            return;
+        }
+        //모든 토큰 검증 코드
+        try {
+            jwtUtil.validateToken(accessToken);
+        } catch (AuthException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(e.getMessage()); // 필요하면 에러 메시지 출력
             return;
         }
 
-        String accessToken = token.split(" ")[1];
-        jwtUtil.validateToken(accessToken);
 
         String username = jwtUtil.getUserName(accessToken);
-        String role = jwtUtil.getRole(accessToken);
         // 로그인 타입 구별을 위해 추가
         String loginType = jwtUtil.getLoginType(accessToken);
 
@@ -43,7 +54,12 @@ public class JwtFilter extends OncePerRequestFilter {
             // 소셜 로그인 Authentication 로직 추가
 
         } else if ("local".equals(loginType)) {
-            // 일반 로그인 Authentication 로직 추가
+            User user = new User();
+            user.setEmail(username);
+
+            CustomUserDetails customUserDetails = new CustomUserDetails(user);
+
+            authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
