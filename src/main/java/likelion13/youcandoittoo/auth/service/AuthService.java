@@ -2,6 +2,7 @@ package likelion13.youcandoittoo.auth.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.util.CookieUtil;
 import likelion13.youcandoittoo.auth.util.JwtHelper;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
@@ -41,14 +42,13 @@ public class AuthService {
         // 추출한 refresh 토큰이 유효한지 검증
         jwtHelper.validateToken(refreshToken);
 
-        // refresh 토큰에서 사용자 이름과 역할(role) 정보 추출
+        // refresh 토큰에서 사용자 정보 추출
         String username = jwtUtil.getUserName(refreshToken);
-        String role = jwtUtil.getRole(refreshToken);
-        String loginType = jwtUtil.getLoginType(refreshToken);
+        LoginType loginType = jwtUtil.getLoginType(refreshToken);
 
         // 새 access 토큰과 refresh 토큰 생성
-        String newAccessToken = jwtUtil.createJwt("access", username, role, loginType, ACCESS_TOKEN_TTL);
-        String newRefreshToken = jwtUtil.createJwt("refresh", username, role, loginType, REFRESH_TOKEN_TTL);
+        String newAccessToken = jwtUtil.createJwt("access", username, loginType, ACCESS_TOKEN_TTL);
+        String newRefreshToken = jwtUtil.createJwt("refresh", username, loginType, REFRESH_TOKEN_TTL);
 
         System.out.println("newAccessToken: " + newAccessToken);
         System.out.println("newRefreshToken: " + newRefreshToken);

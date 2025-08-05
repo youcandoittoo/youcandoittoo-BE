@@ -26,6 +26,7 @@ public enum ErrorCode {
     JWT_MALFORMED(HttpStatus.UNAUTHORIZED, "A008", "JWT 형식이 올바르지 않습니다."),
     INVALID_TOKEN_CATEGORY(HttpStatus.UNAUTHORIZED, "A09", "Token 카테고리가 유효하지 않습니다."),
     TOKEN_NOT_PROVIDED(HttpStatus.UNAUTHORIZED, "A010", "Token이 제공되지 않았습니다."),
+    EMAIL_ALREADY_REGISTERED_WITH_OTHER_PROVIDER(HttpStatus.UNAUTHORIZED, "A011", "이미 계정이 존재하는 이메일에 대해 추가적인 계정 생성을 제한합니다."),
 
     /** ========== 403 FORBIDDEN (권한 부족) ========== **/
     FORBIDDEN(HttpStatus.FORBIDDEN, "F001", "접근이 거부되었습니다."),

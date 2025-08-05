@@ -4,14 +4,19 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import likelion13.youcandoittoo.auth.dto.CustomOAuth2User;
+import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
+import likelion13.youcandoittoo.user.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -32,17 +37,23 @@ public class JwtFilter extends OncePerRequestFilter {
         jwtUtil.validateToken(accessToken);
 
         String username = jwtUtil.getUserName(accessToken);
-        String role = jwtUtil.getRole(accessToken);
         // 로그인 타입 구별을 위해 추가
-        String loginType = jwtUtil.getLoginType(accessToken);
+        LoginType loginType = jwtUtil.getLoginType(accessToken);
 
         Authentication authentication = null;
 
-        // 소셜로그인 / 일반로그인
-        if ("social".equals(loginType)) {
-            // 소셜 로그인 Authentication 로직 추가
+        // 소셜로그인 / 일반로그인에 따른 처리
+        if (LoginType.SOCIAL.equals(loginType)) {
+            CustomOAuth2User customOAuth2User = new CustomOAuth2User(
+                    UserDTO.builder()
+                            .username(username)
+                            .name(username)
+                            .loginType(loginType)
+                            .build());
 
-        } else if ("local".equals(loginType)) {
+            authentication = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
+
+        } else if (LoginType.LOCAL.equals(loginType)) {
             // 일반 로그인 Authentication 로직 추가
         }
 
