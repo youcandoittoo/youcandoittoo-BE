@@ -1,4 +1,4 @@
-package likelion13.youcandoittoo.auth.dto.social;
+package likelion13.youcandoittoo.auth.dto.social.provider;
 
 public interface OAuth2Response {
 
