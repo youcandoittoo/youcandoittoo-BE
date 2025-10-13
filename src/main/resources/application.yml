@@ -34,8 +34,10 @@ spring:
 
   jwt:
     secret: ${jwt.secret}
-    access-ttl: ${jwt.access.ttl}
-    refresh-ttl: ${jwt.refresh.ttl}'
+    access:
+      ttl: ${jwt.access.ttl}
+    refresh:
+      ttl: ${jwt.refresh.ttl}'
 
 
   security:

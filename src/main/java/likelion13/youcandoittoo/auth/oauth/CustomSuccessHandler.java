@@ -27,8 +27,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             JwtUtil jwtUtil,
             CookieUtil cookieUtil,
             JwtHelper jwtHelper,
-            @Value("{spring.jwt.access.ttl}") long ACCESS_TOKEN_TTL,
-            @Value("{spring.jwt.refresh.ttl}") long REFRESH_TOKEN_TTL
+            @Value("${spring.jwt.access.ttl}") long ACCESS_TOKEN_TTL,
+            @Value("${spring.jwt.refresh.ttl}") long REFRESH_TOKEN_TTL
     ) {
         this.jwtUtil = jwtUtil;
         this.cookieUtil = cookieUtil;
