@@ -27,6 +27,7 @@ public class JwtUtil {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
+    // email을 username로 사용
     public String createJwt(String category, String username, UserRole role, Long expiredS) {
         return Jwts.builder()
                 .claim("category", category)

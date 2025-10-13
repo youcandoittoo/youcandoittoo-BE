@@ -4,14 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import likelion13.youcandoittoo.auth.filter.AuthExceptionFilter;
 import likelion13.youcandoittoo.auth.filter.CustomLogoutFilter;
 import likelion13.youcandoittoo.auth.filter.JwtFilter;
+import likelion13.youcandoittoo.auth.filter.LoginFilter;
 import likelion13.youcandoittoo.auth.oauth.CustomOauth2UserService;
 import likelion13.youcandoittoo.auth.oauth.CustomSuccessHandler;
+import likelion13.youcandoittoo.global.exception.handler.CustomAccessDeniedHandler;
+import likelion13.youcandoittoo.global.exception.handler.CustomAuthenticationEntryPoint;
 import likelion13.youcandoittoo.auth.util.CookieUtil;
 import likelion13.youcandoittoo.auth.util.JwtHelper;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,12 +36,27 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // LoginFilter에 사용
+    private final AuthenticationConfiguration authenticationConfiguration;
+
+    // 소셜 로그인
     private final CustomOauth2UserService customOauth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
+
+    // JWT 및 필터 공통 의존성
     private final ObjectMapper objectMapper;
     private final JwtHelper jwtHelper;
     private final CookieUtil cookieUtil;
     private final JwtUtil jwtUtil;
+
+    // 예외 처리 핸들러
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -55,29 +75,39 @@ public class SecurityConfig {
         http.formLogin(form -> form.disable());
         http.httpBasic(basic -> basic.disable());
 
-        // 필터 등록 추가 예정
-        http.addFilterBefore(new AuthExceptionFilter(objectMapper), LogoutFilter.class);
-        http.addFilterAt(new CustomLogoutFilter(jwtHelper, cookieUtil, jwtUtil, objectMapper), LogoutFilter.class);
-        http.addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
-
-        http.oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOauth2UserService))
-                        .successHandler(customSuccessHandler)
-                        // .failureHandler(customFailureHandler)
-        );
-
-        // 예외 처리 설정 추가 예정 (필요하다면)
-
-
-        // 요청 경로별 권한 설정
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/reissue").permitAll()
-                .anyRequest().permitAll()
-        );
-
         // 세션 관리 정책
         http.sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        );
+
+        // 소셜 로그인
+        http.oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOauth2UserService))
+                        .successHandler(customSuccessHandler)
+                // .failureHandler(customFailureHandler)
+        );
+
+        // 필터 등록 추가 예정
+        http.addFilterBefore(new AuthExceptionFilter(objectMapper), LogoutFilter.class);
+        http.addFilterAt(new CustomLogoutFilter(jwtHelper, cookieUtil, jwtUtil, objectMapper), LogoutFilter.class);
+        http.addFilterAt(new LoginFilter(
+                authenticationManager(authenticationConfiguration), jwtUtil, cookieUtil, jwtHelper, objectMapper),
+                UsernamePasswordAuthenticationFilter.class
+        );
+        http.addFilterAfter(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+
+        // 예외 처리 설정
+        http.exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler)
+        );
+
+        // 요청 경로별 권한 설정
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/", "/login", "/reissue").permitAll()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // .anyRequest().authenticated()
+                .anyRequest().permitAll()
         );
 
         return http.build();
