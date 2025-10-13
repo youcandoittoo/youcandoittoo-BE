@@ -2,7 +2,7 @@ package likelion13.youcandoittoo.auth.oauth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import likelion13.youcandoittoo.auth.dto.CustomOAuth2User;
+import likelion13.youcandoittoo.auth.dto.social.CustomOAuth2User;
 import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.util.CookieUtil;
 import likelion13.youcandoittoo.auth.util.JwtHelper;

@@ -1,4 +1,4 @@
-package likelion13.youcandoittoo.auth.dto;
+package likelion13.youcandoittoo.auth.dto.social;
 
 import java.util.Map;
 

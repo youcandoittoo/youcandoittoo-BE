@@ -4,7 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import likelion13.youcandoittoo.auth.dto.CustomOAuth2User;
+import likelion13.youcandoittoo.auth.dto.social.CustomOAuth2User;
 import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
 import likelion13.youcandoittoo.user.dto.UserDTO;

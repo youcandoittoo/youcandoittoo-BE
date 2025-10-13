@@ -1,6 +1,7 @@
 package likelion13.youcandoittoo.auth.oauth;
 
 import likelion13.youcandoittoo.auth.dto.*;
+import likelion13.youcandoittoo.auth.dto.social.*;
 import likelion13.youcandoittoo.global.exception.custom.AuthException;
 import likelion13.youcandoittoo.global.exception.error.ErrorCode;
 import likelion13.youcandoittoo.user.dto.UserDTO;

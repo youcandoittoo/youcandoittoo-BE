@@ -1,5 +1,6 @@
-package likelion13.youcandoittoo.auth.dto;
+package likelion13.youcandoittoo.auth.dto.social;
 
+import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.user.dto.UserDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
