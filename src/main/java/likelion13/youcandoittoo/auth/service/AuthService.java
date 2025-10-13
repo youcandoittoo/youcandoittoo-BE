@@ -3,15 +3,23 @@ package likelion13.youcandoittoo.auth.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import likelion13.youcandoittoo.auth.dto.LoginType;
+import likelion13.youcandoittoo.auth.dto.local.SignUpRequest;
 import likelion13.youcandoittoo.auth.util.CookieUtil;
 import likelion13.youcandoittoo.auth.util.JwtHelper;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
+import likelion13.youcandoittoo.global.exception.custom.AuthException;
+import likelion13.youcandoittoo.global.exception.error.ErrorCode;
 import likelion13.youcandoittoo.global.response.SuccessResponse;
+import likelion13.youcandoittoo.user.entity.User;
+import likelion13.youcandoittoo.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class AuthService {
 
     private final JwtUtil jwtUtil;
@@ -19,22 +27,26 @@ public class AuthService {
     private final JwtHelper jwtHelper;
     private final long ACCESS_TOKEN_TTL;
     private final long REFRESH_TOKEN_TTL;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(
             JwtUtil jwtUtil,
             CookieUtil cookieUtil,
             JwtHelper jwtHelper,
             @Value("{spring.jwt.access-ttl}") long ACCESS_TOKEN_TTL,
-            @Value("{spring.jwt.refresh-ttl}") long REFRESH_TOKEN_TTL
+            @Value("{spring.jwt.refresh-ttl}") long REFRESH_TOKEN_TTL, UserRepository userRepository, PasswordEncoder passwordEncoder
     ) {
         this.jwtUtil = jwtUtil;
         this.cookieUtil = cookieUtil;
         this.jwtHelper = jwtHelper;
         this.ACCESS_TOKEN_TTL = ACCESS_TOKEN_TTL;
         this.REFRESH_TOKEN_TTL = REFRESH_TOKEN_TTL;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+    public String reissue(HttpServletRequest request, HttpServletResponse response) {
 
         // 요청에서 refresh 토큰 값을 쿠키로부터 추출
         String refreshToken = cookieUtil.getCookieValue(request, "refresh");
@@ -64,6 +76,23 @@ public class AuthService {
         response.setHeader("Authorization", "Bearer " + newAccessToken);
         response.addCookie(cookieUtil.createCookie("refresh", newRefreshToken, (int) REFRESH_TOKEN_TTL));
 
-        return ResponseEntity.ok(SuccessResponse.ok("Access token reissued"));
+        return "Access token reissued";
+    }
+
+    public String signUp(SignUpRequest signUpRequest) {
+
+        if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
+            throw new AuthException(ErrorCode.DUPLICATE_RESOURCE, "이미 가입된 이메일입니다.");
+        }
+
+        User user = User.builder()
+                .email(signUpRequest.getEmail())
+                .password(passwordEncoder.encode(signUpRequest.getPassword()))
+                .nickName(signUpRequest.getNickName())
+                .build();
+
+        userRepository.save(user);
+
+        return "sign-up success";
     }
 }
