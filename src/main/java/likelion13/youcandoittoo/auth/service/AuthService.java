@@ -2,18 +2,16 @@ package likelion13.youcandoittoo.auth.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.dto.local.SignUpRequest;
 import likelion13.youcandoittoo.auth.util.CookieUtil;
 import likelion13.youcandoittoo.auth.util.JwtHelper;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
 import likelion13.youcandoittoo.global.exception.custom.AuthException;
 import likelion13.youcandoittoo.global.exception.error.ErrorCode;
-import likelion13.youcandoittoo.global.response.SuccessResponse;
+import likelion13.youcandoittoo.user.UserRole;
 import likelion13.youcandoittoo.user.entity.User;
 import likelion13.youcandoittoo.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,11 +54,11 @@ public class AuthService {
 
         // refresh 토큰에서 사용자 정보 추출
         String username = jwtUtil.getUserName(refreshToken);
-        LoginType loginType = jwtUtil.getLoginType(refreshToken);
+        UserRole role = jwtUtil.getRole(refreshToken);
 
         // 새 access 토큰과 refresh 토큰 생성
-        String newAccessToken = jwtUtil.createJwt("access", username, loginType, ACCESS_TOKEN_TTL);
-        String newRefreshToken = jwtUtil.createJwt("refresh", username, loginType, REFRESH_TOKEN_TTL);
+        String newAccessToken = jwtUtil.createJwt("access", username, role, ACCESS_TOKEN_TTL);
+        String newRefreshToken = jwtUtil.createJwt("refresh", username, role, REFRESH_TOKEN_TTL);
 
         System.out.println("newAccessToken: " + newAccessToken);
         System.out.println("newRefreshToken: " + newRefreshToken);

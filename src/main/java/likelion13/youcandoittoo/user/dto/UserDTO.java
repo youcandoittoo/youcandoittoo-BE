@@ -1,6 +1,6 @@
 package likelion13.youcandoittoo.user.dto;
 
-import likelion13.youcandoittoo.auth.dto.LoginType;
+import likelion13.youcandoittoo.user.UserRole;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +8,7 @@ import lombok.Getter;
 @Builder
 public class UserDTO {
 
-    private final String username;
+    private final String email;
     private final String name;
-    private final LoginType loginType;
+    private final UserRole role;
 }

@@ -1,9 +1,13 @@
 package likelion13.youcandoittoo.auth.oauth;
 
-import likelion13.youcandoittoo.auth.dto.*;
 import likelion13.youcandoittoo.auth.dto.social.*;
+import likelion13.youcandoittoo.auth.dto.social.provider.GoogleResponse;
+import likelion13.youcandoittoo.auth.dto.social.provider.KakaoResponse;
+import likelion13.youcandoittoo.auth.dto.social.provider.NaverResponse;
+import likelion13.youcandoittoo.auth.dto.social.provider.OAuth2Response;
 import likelion13.youcandoittoo.global.exception.custom.AuthException;
 import likelion13.youcandoittoo.global.exception.error.ErrorCode;
+import likelion13.youcandoittoo.user.UserRole;
 import likelion13.youcandoittoo.user.dto.UserDTO;
 import likelion13.youcandoittoo.user.entity.AuthProvider;
 import likelion13.youcandoittoo.user.entity.User;
@@ -56,9 +60,9 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
             User existingUser = authProviderOpt.get().getUser();
 
             return new CustomOAuth2User(UserDTO.builder()
-                    .username(existingUser.getEmail())
+                    .email(existingUser.getEmail())
                     .name(existingUser.getNickName())
-                    .loginType(LoginType.SOCIAL)
+                    .role(existingUser.getRole())
                     .build());
         }
 
@@ -88,9 +92,9 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
                     //  (비밀번호는 소셜 로그인 유저이므로 빈값으로 설정)
                     .password("")
                     .nickName(nickName)
+                    .role(UserRole.USER)
                     .build();
-
-            user = userRepository.save(user);
+            userRepository.save(user);
         }
 
         // AuthProvider 새로 등록
@@ -103,9 +107,9 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
         authProviderRepository.save(newProvider);
 
         return new CustomOAuth2User(UserDTO.builder()
-                .username(user.getEmail())
+                .email(user.getEmail())
                 .name(user.getNickName())
-                .loginType(LoginType.SOCIAL)
+                .role(user.getRole())
                 .build());
     }
 

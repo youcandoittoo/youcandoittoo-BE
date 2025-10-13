@@ -4,18 +4,18 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import likelion13.youcandoittoo.auth.dto.social.CustomOAuth2User;
-import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
-import likelion13.youcandoittoo.user.dto.UserDTO;
+import likelion13.youcandoittoo.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
@@ -37,25 +37,13 @@ public class JwtFilter extends OncePerRequestFilter {
         jwtUtil.validateToken(accessToken);
 
         String username = jwtUtil.getUserName(accessToken);
-        // 로그인 타입 구별을 위해 추가
-        LoginType loginType = jwtUtil.getLoginType(accessToken);
+        UserRole role = jwtUtil.getRole(accessToken);
 
-        Authentication authentication = null;
-
-        // 소셜로그인 / 일반로그인에 따른 처리
-        if (LoginType.SOCIAL.equals(loginType)) {
-            CustomOAuth2User customOAuth2User = new CustomOAuth2User(
-                    UserDTO.builder()
-                            .username(username)
-                            .name(username)
-                            .loginType(loginType)
-                            .build());
-
-            authentication = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
-
-        } else if (LoginType.LOCAL.equals(loginType)) {
-            // 일반 로그인 Authentication 로직 추가
-        }
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                username,
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toString()))
+        );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);

@@ -5,9 +5,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
-import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.global.exception.custom.AuthException;
 import likelion13.youcandoittoo.global.exception.error.ErrorCode;
+import likelion13.youcandoittoo.user.UserRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
@@ -27,11 +27,10 @@ public class JwtUtil {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
-    public String createJwt(String category, String username, LoginType loginType, Long expiredS) {
+    public String createJwt(String category, String username, UserRole role, Long expiredS) {
         return Jwts.builder()
                 .claim("category", category)
-                // 소셜 / 일반 로그인 구분
-                .claim("loginType", loginType.name())
+                .claim("role", role.name())
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + (expiredS * 1000)))
@@ -59,8 +58,8 @@ public class JwtUtil {
         return getClaims(refreshToken).getExpiration().getTime();
     }
 
-    public LoginType getLoginType(String accessToken) {
-        return LoginType.valueOf(getClaims(accessToken).get("loginType", String.class));
+    public UserRole getRole(String token) {
+        return UserRole.valueOf(getClaims(token).get("role", String.class));
     }
 
     public void validateToken(String token) {

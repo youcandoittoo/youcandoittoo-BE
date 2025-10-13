@@ -3,10 +3,10 @@ package likelion13.youcandoittoo.auth.oauth;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import likelion13.youcandoittoo.auth.dto.social.CustomOAuth2User;
-import likelion13.youcandoittoo.auth.dto.LoginType;
 import likelion13.youcandoittoo.auth.util.CookieUtil;
 import likelion13.youcandoittoo.auth.util.JwtHelper;
 import likelion13.youcandoittoo.auth.util.JwtUtil;
+import likelion13.youcandoittoo.user.UserRole;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -42,11 +42,11 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
 
-        String username = customUserDetails.getUsername();
-        LoginType loginType = customUserDetails.getLoginType();
+        String username = customUserDetails.getEmail();
+        UserRole role = customUserDetails.getRole();
 
-        String accessToken = jwtUtil.createJwt("access", username, loginType, ACCESS_TOKEN_TTL);
-        String refreshToken = jwtUtil.createJwt("refresh", username, loginType, REFRESH_TOKEN_TTL);
+        String accessToken = jwtUtil.createJwt("access", username, role, ACCESS_TOKEN_TTL);
+        String refreshToken = jwtUtil.createJwt("refresh", username, role, REFRESH_TOKEN_TTL);
 
         System.out.println("accessToken: Bearer " + accessToken);
         System.out.println("refreshToken: " + refreshToken);
