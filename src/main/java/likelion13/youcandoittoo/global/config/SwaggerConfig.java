@@ -9,7 +9,7 @@ import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// http://localhost:8080/swagger-ui/index.html
+// http://localhost:8084/swagger-ui/index.html
 @OpenAPIDefinition(
         info = @Info(title = "youcandoittoo API", version = "v1"),
         security = @SecurityRequirement(name = "bearerAuth")

@@ -11,12 +11,14 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "users")
 public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 통합 로그인을 위해서 username이 아닌 email를 고유 식별자로 사용
     @Column(nullable = false, unique = true)
     private String email;
 

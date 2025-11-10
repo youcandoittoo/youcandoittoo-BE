@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8084
   address: 0.0.0.0
 
 spring:
@@ -37,7 +37,7 @@ spring:
     access:
       ttl: ${jwt.access.ttl}
     refresh:
-      ttl: ${jwt.refresh.ttl}'
+      ttl: ${jwt.refresh.ttl}
 
 
   security:
