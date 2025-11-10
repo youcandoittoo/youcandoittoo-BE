@@ -32,8 +32,8 @@ public class AuthService {
             JwtUtil jwtUtil,
             CookieUtil cookieUtil,
             JwtHelper jwtHelper,
-            @Value("{spring.jwt.access-ttl}") long ACCESS_TOKEN_TTL,
-            @Value("{spring.jwt.refresh-ttl}") long REFRESH_TOKEN_TTL, UserRepository userRepository, PasswordEncoder passwordEncoder
+            @Value("${spring.jwt.access.ttl}") long ACCESS_TOKEN_TTL,
+            @Value("${spring.jwt.refresh.ttl}") long REFRESH_TOKEN_TTL, UserRepository userRepository, PasswordEncoder passwordEncoder
     ) {
         this.jwtUtil = jwtUtil;
         this.cookieUtil = cookieUtil;
@@ -87,6 +87,7 @@ public class AuthService {
                 .email(signUpRequest.getEmail())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
                 .nickName(signUpRequest.getNickName())
+                .role(UserRole.USER)
                 .build();
 
         userRepository.save(user);
