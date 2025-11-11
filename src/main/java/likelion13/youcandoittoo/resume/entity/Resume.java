@@ -34,7 +34,7 @@ public class Resume extends BaseEntity {
     private String textContent;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "userid", nullable = false)
+    @JoinColumn(name = "id", nullable = false)
     private User user;
 
 }

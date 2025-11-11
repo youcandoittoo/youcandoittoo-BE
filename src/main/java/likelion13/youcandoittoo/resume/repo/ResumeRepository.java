@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
-    Page<Resume> findAllByUser_UserId(Long userId, Pageable pageable);
-    Page<Resume> findAllByUser_UserIdAndInputType(Long userId, InputType inputType, Pageable pageable);
-    boolean existsByResumeIdAndUser_UserId(Long resumeId, Long userId);
+    Page<Resume> findAllByUser_id(Long id, Pageable pageable);
+    Page<Resume> findAllByUser_idAndInputType(Long id, InputType inputType, Pageable pageable);
+    boolean existsByResumeIdAndUser_id(Long resumeId, Long id);
 }

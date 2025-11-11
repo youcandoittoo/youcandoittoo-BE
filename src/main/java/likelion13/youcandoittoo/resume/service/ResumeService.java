@@ -24,12 +24,12 @@ public class ResumeService {
     private final UserRepository userRepository;
 
     //자기소개서 저장
-    public ResumeResDto create(Long userId, ResumeReqDto resumeReqDto) {
+    public ResumeResDto create(Long id, ResumeReqDto resumeReqDto) {
 
         validateCreate(resumeReqDto);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
 
         Resume resume = Resume.builder()
                 .inputType(resumeReqDto.getInputType())
@@ -46,29 +46,29 @@ public class ResumeService {
 
     //자소서 세부사항
     @Transactional
-    public ResumeResDto getOneResume(Long userId, Long resumeId) {
+    public ResumeResDto getOneResume(Long id, Long resumeId) {
 
         Resume resume = resumeRepository.findById(resumeId).orElseThrow(() -> new IllegalArgumentException("resume not found"));
 
-        assertOwner(userId, resume);
+        assertOwner(id, resume);
         return toResponse(resume);
     }
 
     //자소서 전체 목록
     @Transactional
-    public Page<ResumeResDto> resumeList(Long userId, InputType inputType, Pageable pageable) {
+    public Page<ResumeResDto> resumeList(Long id, InputType inputType, Pageable pageable) {
 
         Page<Resume> page = (inputType == null)
-                ? resumeRepository.findAllByUser_UserId(userId, pageable)
-                : resumeRepository.findAllByUser_UserIdAndInputType(userId, inputType, pageable);
+                ? resumeRepository.findAllByUser_id(id, pageable)
+                : resumeRepository.findAllByUser_idAndInputType(id, inputType, pageable);
         return page.map(this::toResponse);
     }
 
     //자소서 수정
-    public ResumeResDto updateResume(Long userId, Long resumeId, ResumeUpdateDto resumeUpdateDto) {
+    public ResumeResDto updateResume(Long id, Long resumeId, ResumeUpdateDto resumeUpdateDto) {
 
         Resume resume = resumeRepository.findById(resumeId).orElseThrow(() -> new IllegalArgumentException("resume not found"));
-        assertOwner(userId, resume);
+        assertOwner(id, resume);
 
         if (resumeUpdateDto.getTitle() != null)
             resume.setTitle(resumeUpdateDto.getTitle());
@@ -82,16 +82,16 @@ public class ResumeService {
         return toResponse(resume);
     }
 
-    public void deleteResume(Long userId, Long resumeId) {
+    public void deleteResume(Long id, Long resumeId) {
 
-        if(!resumeRepository.existsByResumeIdAndUser_UserId(resumeId, userId)){
+        if(!resumeRepository.existsByResumeIdAndUser_id(resumeId, id)){
             throw new IllegalArgumentException("resume not found");
         }
         resumeRepository.deleteById(resumeId);
     }
 
-    private void assertOwner(Long loginUserId, Resume r) {
-        if (!r.getUser().getId().equals(loginUserId)) {
+    private void assertOwner(Long loginId, Resume r) {
+        if (!r.getUser().getId().equals(loginId)) {
             throw new SecurityException("권한이 없습니다.");
         }
     }
@@ -112,7 +112,7 @@ public class ResumeService {
                 .company(r.getCompany())
                 .domain(r.getDomain())
                 .textContent(r.getTextContent())
-                .userId(r.getUser().getId())
+                .id(r.getUser().getId())
                 .createdAt(r.getCreatedAt())
                 .updatedAt(r.getUpdatedAt())
                 .build();

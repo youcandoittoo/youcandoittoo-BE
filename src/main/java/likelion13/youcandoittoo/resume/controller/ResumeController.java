@@ -17,45 +17,45 @@ public class ResumeController {
 
     private final ResumeService resumeService;
 
-    private Long getUserId(Object principal) {
-        // 프로젝트의 UserPrincipal에서 userId를 추출하도록 구현
+    private Long getId(Object principal) {
+        // 프로젝트의 UserPrincipal에서 id를 추출하도록 구현
         return (Long) principal;
     }
 
     @PostMapping("/save")
-    public ResumeResDto createResume(@RequestHeader("X-USER-ID") Long userId,
+    public ResumeResDto createResume(@RequestHeader("X-USER-ID") Long id,
                                      @RequestBody ResumeReqDto resumeReqDto) {
 
-        return resumeService.create(userId, resumeReqDto);
+        return resumeService.create(id, resumeReqDto);
     }
 
     @GetMapping("/{resumeId}")
-    public ResumeResDto getOneResume(@RequestHeader("X-USER-ID") Long userId,
+    public ResumeResDto getOneResume(@RequestHeader("X-USER-ID") Long id,
                                      @PathVariable Long resumeId) {
 
-        return resumeService.getOneResume(userId, resumeId);
+        return resumeService.getOneResume(id, resumeId);
     }
 
     @GetMapping
-    public Page<ResumeResDto> list(@RequestHeader("X-USER-ID") Long userId,
+    public Page<ResumeResDto> list(@RequestHeader("X-USER-ID") Long id,
                                    @RequestParam(required = false) InputType inputType,
                                    Pageable pageable) {
 
-        return resumeService.resumeList(userId, inputType, pageable);
+        return resumeService.resumeList(id, inputType, pageable);
     }
 
     @PutMapping("/{resumeId}")
-    public ResumeResDto updateResume(@RequestHeader("X-USER-ID") Long userId,
+    public ResumeResDto updateResume(@RequestHeader("X-USER-ID") Long id,
                                      @PathVariable Long resumeId,
                                      @RequestBody ResumeUpdateDto resumeUpdateDto) {
 
-        return resumeService.updateResume(userId, resumeId, resumeUpdateDto);
+        return resumeService.updateResume(id, resumeId, resumeUpdateDto);
     }
 
     @DeleteMapping("/{resumeId}")
-    public void delete(@RequestHeader("X-USER-ID") Long userId,
+    public void delete(@RequestHeader("X-USER-ID") Long id,
                        @PathVariable Long resumeId) {
 
-        resumeService.deleteResume(userId, resumeId);
+        resumeService.deleteResume(id, resumeId);
     }
 }

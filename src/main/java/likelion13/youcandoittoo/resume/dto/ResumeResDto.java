@@ -15,7 +15,7 @@ public class ResumeResDto {
     private String company;
     private String domain;
     private String textContent;
-    private Long userId;
+    private Long id;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
