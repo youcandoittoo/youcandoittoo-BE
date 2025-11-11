@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -37,74 +38,24 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
      * 일반계졍 존재한다면 계정 통합 처리
      */
     @Override
+    @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
         OAuth2Response oAuth2Response = resolveOAuth2Response(registrationId, oAuth2User);
-        if (oAuth2Response == null) {
-            throw new AuthException(ErrorCode.UNSUPPORTED_OPERATION);
+
+        CustomOAuth2User existingOAuthUser = getExistingSocialUserIfPresent(oAuth2Response);
+        if (existingOAuthUser != null) {
+            return existingOAuthUser;
         }
 
-        // 공급자 응답정보 파싱
-        String provider = oAuth2Response.getProvider();
-        String providerId = oAuth2Response.getProviderId();
-        String email = oAuth2Response.getEmail();
-        String nickName = oAuth2Response.getName();
-        String username = provider + "_" + providerId;
+        User user = findOrCreateUser(oAuth2Response);
 
-        // 이미 해당 소셜 계정이 존재한다면 CustomOAuth2User 반환
-        Optional<AuthProvider> authProviderOpt = authProviderRepository.findByUsername(username);
-        if (authProviderOpt.isPresent()) {
-            User existingUser = authProviderOpt.get().getUser();
+        ensureNoOtherProviderOrThrow(user, oAuth2Response);
 
-            return new CustomOAuth2User(UserDTO.builder()
-                    .email(existingUser.getEmail())
-                    .name(existingUser.getNickName())
-                    .role(existingUser.getRole())
-                    .build());
-        }
-
-        // 동일 이메일이 기존 유저(일반/다른 공급자 계정)에 이미 존재하는 경우
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        User user;
-
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
-
-            Optional<AuthProvider> existingAuthProvider = authProviderRepository.findByUser(user);
-            // 다른 공급자 계정이 존재한다면
-            if (existingAuthProvider.isPresent()) {
-                String existingProvider = existingAuthProvider.get().getProvider().name();
-                if (!existingProvider.equalsIgnoreCase(provider)) {
-                    // 추가 소셜 회원가입 제한
-                    throw new AuthException(
-                            ErrorCode.EMAIL_ALREADY_REGISTERED_WITH_OTHER_PROVIDER,
-                            "이 이메일은 " + existingProvider + " 계정으로 이미 등록되어 있습니다. 해당 계정으로 로그인해 주세요."
-                    );
-                }
-            } // 일반 로그인 유저라면 통합 계정으로 처리 (이미 존재하는 user 사용하기에 처리 X)
-        } else {
-            // 유저가 존재하지 않는다면(소셜 회원가입) 처리 O
-            user = User.builder()
-                    .email(email)
-                    //  (비밀번호는 소셜 로그인 유저이므로 빈값으로 설정)
-                    .password("")
-                    .nickName(nickName)
-                    .role(UserRole.USER)
-                    .build();
-            userRepository.save(user);
-        }
-
-        // AuthProvider 새로 등록
-        AuthProvider newProvider = AuthProvider.builder()
-                .provider(OauthProvider.valueOf(provider.toUpperCase()))
-                .username(username)
-                .user(user)
-                .build();
-
-        authProviderRepository.save(newProvider);
+        linkProviderIfAbsent(user, oAuth2Response);
 
         return new CustomOAuth2User(UserDTO.builder()
                 .email(user.getEmail())
@@ -124,6 +75,68 @@ public class CustomOauth2UserService extends DefaultOAuth2UserService {
         else if (registrationId.equals("google")) {
             return new GoogleResponse(oAuth2User.getAttributes());
         }
+        throw new AuthException(ErrorCode.UNSUPPORTED_OPERATION);
+    }
+
+    private String buildUsername(OAuth2Response resp) {
+        return resp.getProvider() + "_" + resp.getProviderId();
+    }
+
+    private CustomOAuth2User getExistingSocialUserIfPresent(OAuth2Response oAuth2Response) {
+        String username = buildUsername(oAuth2Response);
+        Optional<AuthProvider> authProviderOpt = authProviderRepository.findByUsername(username);
+
+        if (authProviderOpt.isPresent()) {
+            User existingUser = authProviderOpt.get().getUser();
+            return new CustomOAuth2User(UserDTO.builder()
+                    .email(existingUser.getEmail())
+                    .name(existingUser.getNickName())
+                    .role(existingUser.getRole())
+                    .build());
+        }
+
         return null;
     }
+
+    private User findOrCreateUser(OAuth2Response oAuth2Response) {
+        return userRepository.findByEmail(oAuth2Response.getEmail())
+                .orElseGet(() -> userRepository.save(
+                        User.builder()
+                                .email(oAuth2Response.getEmail())
+                                .password("")
+                                .nickName(oAuth2Response.getName())
+                                .role(UserRole.USER)
+                                .build()
+                ));
+    }
+
+    private void ensureNoOtherProviderOrThrow(User user, OAuth2Response oAuth2Response) {
+        authProviderRepository.findByUser(user).ifPresent(existing -> {
+            String existingProvider = existing.getProvider().name();
+            if (!existingProvider.equalsIgnoreCase(oAuth2Response.getProvider())) {
+                throw new AuthException(
+                        ErrorCode.EMAIL_ALREADY_REGISTERED_WITH_OTHER_PROVIDER,
+                        "이 이메일은 " + existingProvider + " 계정으로 이미 등록되어 있습니다. 해당 계정으로 로그인해 주세요."
+                );
+            }
+        });
+    }
+
+    private void linkProviderIfAbsent(User user, OAuth2Response oAuth2Response) {
+        String username = buildUsername(oAuth2Response);
+        OauthProvider providerName = OauthProvider.toOauthProvider(oAuth2Response.getProvider());
+
+        if (authProviderRepository.findByUsername(username).isPresent()) {
+            return;
+        }
+
+        AuthProvider newProvider = AuthProvider.builder()
+                .provider(providerName)
+                .username(username)
+                .user(user)
+                .build();
+
+        authProviderRepository.save(newProvider);
+    }
+
 }
