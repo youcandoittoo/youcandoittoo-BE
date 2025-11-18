@@ -2,6 +2,16 @@ server:
   port: 8084
   address: 0.0.0.0
 
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${aws.bucket.name}
+    credentials:
+      access-key: ${aws.s3.access-key}
+      secret-key: ${aws.s3.secret-key}
+
 spring:
   application:
     name: youcandoittoo
@@ -38,7 +48,6 @@ spring:
       ttl: ${jwt.access.ttl}
     refresh:
       ttl: ${jwt.refresh.ttl}
-
 
   security:
     oauth2:

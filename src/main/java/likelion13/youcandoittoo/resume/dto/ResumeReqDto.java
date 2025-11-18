@@ -1,6 +1,6 @@
 package likelion13.youcandoittoo.resume.dto;
 
-import likelion13.youcandoittoo.resume.entity.InputType;
+import likelion13.youcandoittoo.resume.enums.InputType;
 import lombok.*;
 
 @Builder

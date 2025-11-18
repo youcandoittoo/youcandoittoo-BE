@@ -1,7 +1,7 @@
 package likelion13.youcandoittoo.resume.entity;
 
 import likelion13.youcandoittoo.common.entity.BaseEntity;
-import likelion13.youcandoittoo.user.entity.User;
+import likelion13.youcandoittoo.resume.enums.InputType;
 import jakarta.persistence.*;
 import lombok.*;
 
