@@ -1,61 +1,73 @@
 package likelion13.youcandoittoo.resume.controller;
 
-import likelion13.youcandoittoo.resume.dto.ResumeReqDto;
-import likelion13.youcandoittoo.resume.dto.ResumeResDto;
-import likelion13.youcandoittoo.resume.dto.ResumeUpdateDto;
+import likelion13.youcandoittoo.resume.dto.*;
 import likelion13.youcandoittoo.resume.entity.InputType;
+import jakarta.validation.Valid;
 import likelion13.youcandoittoo.resume.service.ResumeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/resume")
+@RequestMapping("/resumes")
 public class ResumeController {
 
     private final ResumeService resumeService;
 
-    private Long getId(Object principal) {
-        // 프로젝트의 UserPrincipal에서 id를 추출하도록 구현
-        return (Long) principal;
+    private String getEmail(String principal) {
+
+        return principal;
     }
 
-    @PostMapping("/save")
-    public ResumeResDto createResume(@RequestHeader("X-USER-ID") Long id,
-                                     @RequestBody ResumeReqDto resumeReqDto) {
-
-        return resumeService.create(id, resumeReqDto);
+    // 공통 생성: inputType을 함께 보냄 (TEXT/FILE)
+    @PostMapping
+    public ResumeResDto create(
+            @AuthenticationPrincipal String principal,
+            @RequestBody @Valid ResumeReqDto req
+    ) {
+        String email = getEmail(principal);
+        return resumeService.create(email, req);
     }
 
-    @GetMapping("/{resumeId}")
-    public ResumeResDto getOneResume(@RequestHeader("X-USER-ID") Long id,
-                                     @PathVariable Long resumeId) {
-
-        return resumeService.getOneResume(id, resumeId);
+    @GetMapping("/{id}")
+    public ResumeResDto getOne(
+            @AuthenticationPrincipal String principal,
+            @PathVariable Long id
+    ) {
+        String email = getEmail(principal);
+        return resumeService.getOneResume(email, id);
     }
 
+    // 목록: ?inputType=TEXT (없으면 전체)
     @GetMapping
-    public Page<ResumeResDto> list(@RequestHeader("X-USER-ID") Long id,
-                                   @RequestParam(required = false) InputType inputType,
-                                   Pageable pageable) {
-
-        return resumeService.resumeList(id, inputType, pageable);
+    public Page<ResumeResDto> list(
+            @AuthenticationPrincipal String principal,
+            @RequestParam(required = false) InputType inputType,
+            Pageable pageable
+    ) {
+        String email = getEmail(principal);
+        return resumeService.resumeList(email, inputType, pageable);
     }
 
-    @PutMapping("/{resumeId}")
-    public ResumeResDto updateResume(@RequestHeader("X-USER-ID") Long id,
-                                     @PathVariable Long resumeId,
-                                     @RequestBody ResumeUpdateDto resumeUpdateDto) {
-
-        return resumeService.updateResume(id, resumeId, resumeUpdateDto);
+    @PutMapping("/{id}")
+    public ResumeResDto update(
+            @AuthenticationPrincipal String principal,
+            @PathVariable Long id,
+            @RequestBody @Valid ResumeUpdateDto req
+    ) {
+        String email = getEmail(principal);
+        return resumeService.updateResume(email, id, req);
     }
 
-    @DeleteMapping("/{resumeId}")
-    public void delete(@RequestHeader("X-USER-ID") Long id,
-                       @PathVariable Long resumeId) {
-
-        resumeService.deleteResume(id, resumeId);
+    @DeleteMapping("/{id}")
+    public void delete(
+            @AuthenticationPrincipal String principal,
+            @PathVariable Long id
+    ) {
+        String email = getEmail(principal);
+        resumeService.deleteResume(email, id);
     }
 }

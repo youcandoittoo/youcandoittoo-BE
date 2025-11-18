@@ -7,8 +7,6 @@ import likelion13.youcandoittoo.resume.dto.ResumeUpdateDto;
 import likelion13.youcandoittoo.resume.entity.InputType;
 import likelion13.youcandoittoo.resume.entity.Resume;
 import likelion13.youcandoittoo.resume.repo.ResumeRepository;
-import likelion13.youcandoittoo.user.entity.User;
-import likelion13.youcandoittoo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,15 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ResumeService {
 
     private final ResumeRepository resumeRepository;
-    private final UserRepository userRepository;
 
     //자기소개서 저장
-    public ResumeResDto create(Long id, ResumeReqDto resumeReqDto) {
+    public ResumeResDto create(String email, ResumeReqDto resumeReqDto) {
 
         validateCreate(resumeReqDto);
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
 
         Resume resume = Resume.builder()
                 .inputType(resumeReqDto.getInputType())
@@ -37,7 +31,7 @@ public class ResumeService {
                 .company(resumeReqDto.getCompany())
                 .domain(resumeReqDto.getDomain())
                 .textContent(resumeReqDto.getInputType() == InputType.TEXT ? resumeReqDto.getTextContent() : null)
-                .user(user)
+                .email(email)
                 .build();
 
         Resume saved = resumeRepository.save(resume);
@@ -46,29 +40,29 @@ public class ResumeService {
 
     //자소서 세부사항
     @Transactional
-    public ResumeResDto getOneResume(Long id, Long resumeId) {
+    public ResumeResDto getOneResume(String email, Long resumeId) {
 
         Resume resume = resumeRepository.findById(resumeId).orElseThrow(() -> new IllegalArgumentException("resume not found"));
 
-        assertOwner(id, resume);
+        assertOwner(email, resume);
         return toResponse(resume);
     }
 
     //자소서 전체 목록
     @Transactional
-    public Page<ResumeResDto> resumeList(Long id, InputType inputType, Pageable pageable) {
+    public Page<ResumeResDto> resumeList(String email, InputType inputType, Pageable pageable) {
 
         Page<Resume> page = (inputType == null)
-                ? resumeRepository.findAllByUser_id(id, pageable)
-                : resumeRepository.findAllByUser_idAndInputType(id, inputType, pageable);
+                ? resumeRepository.findAllByEmail(email, pageable)
+                : resumeRepository.findAllByEmailAndInputType(email, inputType, pageable);
         return page.map(this::toResponse);
     }
 
     //자소서 수정
-    public ResumeResDto updateResume(Long id, Long resumeId, ResumeUpdateDto resumeUpdateDto) {
+    public ResumeResDto updateResume(String email, Long resumeId, ResumeUpdateDto resumeUpdateDto) {
 
         Resume resume = resumeRepository.findById(resumeId).orElseThrow(() -> new IllegalArgumentException("resume not found"));
-        assertOwner(id, resume);
+        assertOwner(email, resume);
 
         if (resumeUpdateDto.getTitle() != null)
             resume.setTitle(resumeUpdateDto.getTitle());
@@ -82,16 +76,16 @@ public class ResumeService {
         return toResponse(resume);
     }
 
-    public void deleteResume(Long id, Long resumeId) {
+    public void deleteResume(String email, Long resumeId) {
 
-        if(!resumeRepository.existsByResumeIdAndUser_id(resumeId, id)){
+        if(!resumeRepository.existsByResumeIdAndEmail(resumeId, email)){
             throw new IllegalArgumentException("resume not found");
         }
         resumeRepository.deleteById(resumeId);
     }
 
-    private void assertOwner(Long loginId, Resume r) {
-        if (!r.getUser().getId().equals(loginId)) {
+    private void assertOwner(String email, Resume r) {
+        if (!r.getEmail().equals(email)) {
             throw new SecurityException("권한이 없습니다.");
         }
     }
@@ -112,7 +106,7 @@ public class ResumeService {
                 .company(r.getCompany())
                 .domain(r.getDomain())
                 .textContent(r.getTextContent())
-                .id(r.getUser().getId())
+                .email(r.getEmail())
                 .createdAt(r.getCreatedAt())
                 .updatedAt(r.getUpdatedAt())
                 .build();

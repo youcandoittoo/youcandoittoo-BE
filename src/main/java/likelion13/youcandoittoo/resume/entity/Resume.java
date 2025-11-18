@@ -33,8 +33,7 @@ public class Resume extends BaseEntity {
     @Column(length = 1500)
     private String textContent;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id", nullable = false)
-    private User user;
+    @Column(nullable = false)
+    private String email;
 
 }
